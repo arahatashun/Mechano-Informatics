@@ -1,2 +1,2 @@
 # machano_info
-code_for_lecture
+知能機械情報学
