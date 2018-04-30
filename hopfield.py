@@ -16,7 +16,7 @@ class Hopfield_Network():
 
         :param num_of_pattern: number of patterns to memorized
         """
-        self.theta = np.zeros([25, 1])
+        self.theta = np.ones([25, 1]) * 0.0
         self.weight = np.zeros([5 * 5, 5 * 5])
 
     def train(self, *train):
@@ -26,8 +26,8 @@ class Hopfield_Network():
         """
         length = len(train)
         for i in range(length):
-            train_flatten = np.ravel(train[i])
-            self.weight += train_flatten @ train_flatten.T / length
+            train_flatten = np.ravel(train[i]).reshape([5 * 5, 1])
+            self.weight = train_flatten @ train_flatten.T / length
         np.fill_diagonal(self.weight, 0)
 
     def potential_energy(self, input_flatten):
@@ -40,7 +40,7 @@ class Hopfield_Network():
         v += self.theta.T @ input_flatten
         return v
 
-    def recall(self, input, iter_num=10):
+    def recall(self, input, iter_num=100):
         """recall image from input
 
         :param input: 5 times 5 array
@@ -53,12 +53,12 @@ class Hopfield_Network():
             index = np.random.randint(25)  # 0 to 24 random value
             energy_now = self.potential_energy(input_flatten)
             energy_array.append(energy_now)
-            temp = input_flatten[:]
-            temp[index] = 1 if temp[index] == 0 else 0
+            temp = np.copy(input_flatten)
+            temp[index] = -1 if temp[index] == 1 else 1
             energy_candidate = self.potential_energy(temp)
-            print("now",energy_now)
-            print("candidate",energy_candidate)
-            print('----------')
+            print("now", energy_now)
+            print("candidate", energy_candidate)
+            print("---------------")
             if energy_candidate < energy_now:
                 input_flatten = temp[:]
 
@@ -67,11 +67,11 @@ class Hopfield_Network():
 
 
 image_1 = np.array(
-    [[0, 0, 1, 0, 0],
-     [0, 0, 1, 0, 0],
-     [0, 0, 1, 0, 0],
-     [0, 0, 1, 0, 0],
-     [0, 0, 1, 0, 0]])
+    [[-1, -1, 1, -1, -1],
+     [-1, -1, 1, -1, -1],
+     [-1, -1, 1, -1, -1],
+     [-1, -1, 1, -1, -1],
+     [-1, -1, 1, -1, -1]])
 
 
 def test_1():
@@ -82,8 +82,9 @@ def test_1():
                      [0, 0, 1, 0, 0],
                      [0, 0, 1, 0, 0],
                      [0, 0, 1, 0, 0]])
-    hoge, _ = hopfield.recall(test)
+    hoge, _ = hopfield.recall(image_1)
     print(hoge)
+
 
 if __name__ == '__main__':
     test_1()
