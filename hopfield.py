@@ -11,22 +11,23 @@ import numpy as np
 class Hopfield_Network():
     """Hopfield Network"""
 
-    def __init__(self, num_of_pattern=1):
+    def __init__(self):
         """Constructor
 
         :param num_of_pattern: number of patterns to memorized
         """
         self.theta = np.zeros([25, 1])
-        self.q = num_of_pattern
         self.weight = np.zeros([5 * 5, 5 * 5])
 
-    def train(self, train_array):
+    def train(self, *train):
         """ train weight Hebbian
 
-        :param train_array: n times n
+        :param train: n times n train list
         """
-        train_flatten = np.ravel(train_array)
-        self.weight += train_flatten @ train_flatten.T / self.q
+        length = len(train)
+        for i in range(length):
+            train_flatten = np.ravel(train[i])
+            self.weight += train_flatten @ train_flatten.T / length
         np.fill_diagonal(self.weight, 0)
 
     def potential_energy(self, input_flatten):
@@ -39,7 +40,7 @@ class Hopfield_Network():
         v += self.theta.T @ input_flatten
         return v
 
-    def recall(self, input, iter_num=100):
+    def recall(self, input, iter_num=10):
         """recall image from input
 
         :param input: 5 times 5 array
@@ -53,10 +54,13 @@ class Hopfield_Network():
             energy_now = self.potential_energy(input_flatten)
             energy_array.append(energy_now)
             temp = input_flatten[:]
-            temp[index] = 1 if temp[index] == 0 else 1
+            temp[index] = 1 if temp[index] == 0 else 0
             energy_candidate = self.potential_energy(temp)
+            print("now",energy_now)
+            print("candidate",energy_candidate)
+            print('----------')
             if energy_candidate < energy_now:
-                input_flatten = temp
+                input_flatten = temp[:]
 
         recall_img = np.reshape(input_flatten, (5, 5))
         return recall_img, energy_array
