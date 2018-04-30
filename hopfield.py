@@ -87,6 +87,19 @@ def accuray(teacher, recalled):
     print("precision", precision)
 
 
+def add_noise(img, noise):
+    """add noise to img
+
+    :param img:
+    :param noise: number of bit to be changed
+    """
+    index = random.sample([i for i in range(25)], noise)
+    noisy_img = np.ravel(np.copy(img))
+    noisy_img[index] = -noisy_img[index]
+    noisy_img = np.reshape(noisy_img, (5, 5))
+    return noisy_img
+
+
 def test_1(noise):
     """experiment 1
 
@@ -95,10 +108,7 @@ def test_1(noise):
     """
     hopfield = Hopfield_Network()
     hopfield.train(image_1)
-    index = random.sample([i for i in range(25)], noise)
-    test = np.ravel(np.copy(image_1))
-    test[index] = -test[index]
-    test = np.reshape(test, (5, 5))
+    test = add_noise(image_1, noise)
     recall, _ = hopfield.recall(test)
     accuray(image_1, recall)
 
