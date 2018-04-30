@@ -7,6 +7,9 @@ Hopfield Network
 """
 import numpy as np
 import random
+import matplotlib.pyplot as plt
+plt.rcParams['font.family'] = 'IPAPGothic'
+
 
 
 class Hopfield_Network():
@@ -41,7 +44,7 @@ class Hopfield_Network():
         v += self.theta.T @ input_flatten
         return v
 
-    def recall(self, input, iter_num=100):
+    def recall(self, input, iter_num=1000):
         """recall image from input
 
         :param input: 5 times 5 array
@@ -73,6 +76,41 @@ image_1 = np.array(
      [-1, -1, 1, -1, -1],
      [-1, -1, 1, -1, -1],
      [-1, -1, 1, -1, -1]])
+
+image_2 = np.array(
+    [[1, -1, -1, -1, -1],
+     [-1, 1, -1, -1, -1],
+     [-1, -1, 1, -1, -1],
+     [-1, -1, -1, 1, -1],
+     [-1, -1, -1, -1, 1]])
+
+image_3 = np.array(
+    [[-1, -1, -1, -1, 1],
+     [-1, -1, -1, 1, -1],
+     [-1, -1, 1, -1, -1],
+     [-1, 1, -1, -1, -1],
+     [1, -1, -1, -1, -1]])
+
+image_4 = np.array(
+    [[1, -1, -1, -1, -1],
+     [1, -1, -1, -1, -1],
+     [1, -1, -1, -1, -1],
+     [1, -1, -1, -1, -1],
+     [1, -1, -1, -1, -1]])
+
+image_5 = np.array(
+    [[-1, -1, -1, -1, 1],
+     [-1, -1, -1, -1, 1],
+     [-1, -1, -1, -1, 1],
+     [-1, -1, -1, -1, 1],
+     [-1, -1, -1, -1, 1]])
+
+image_6 = np.array(
+    [[-1, -1, -1, -1, -1],
+     [-1, -1, -1, -1, -1],
+     [-1, -1, -1, -1, -1],
+     [-1, -1, -1, -1, -1],
+     [1, 1, 1, 1, 1]])
 
 
 def accuray(teacher, recalled):
@@ -109,9 +147,27 @@ def test_1(noise):
     hopfield = Hopfield_Network()
     hopfield.train(image_1)
     test = add_noise(image_1, noise)
-    recall, _ = hopfield.recall(test)
+    recall, energy = hopfield.recall(test)
     accuray(image_1, recall)
+    return energy
 
+def test_2(noise):
+    """experiment 2
+
+    :param noise:
+    :return:
+    """
+    hopfield = Hopfield_Network()
+    hopfield.train([image_1,image_2,image_3,image_4,image_5,image_6])
+    test = add_noise(image_3, noise)
+    recall, energy = hopfield.recall(test)
+    accuray(image_3, recall)
+    return energy
 
 if __name__ == '__main__':
-    test_1(int(input("noise")))
+    ene1 = test_1(int(input("noise")))
+    ene2 = test_1(int(input("noise")))
+    plt.figure(figsize=(6, 5), facecolor="w")
+    plt.plot(ene1)
+    plt.plot(ene2)
+    plt.show()
