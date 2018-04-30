@@ -6,6 +6,7 @@ Code for assignment
 Hopfield Network
 """
 import numpy as np
+import random
 
 
 class Hopfield_Network():
@@ -56,9 +57,9 @@ class Hopfield_Network():
             temp = np.copy(input_flatten)
             temp[index] = -1 if temp[index] == 1 else 1
             energy_candidate = self.potential_energy(temp)
-            print("now", energy_now)
-            print("candidate", energy_candidate)
-            print("---------------")
+            # print("now", energy_now)
+            # print("candidate", energy_candidate)
+            # print("---------------")
             if energy_candidate < energy_now:
                 input_flatten = temp[:]
 
@@ -74,17 +75,33 @@ image_1 = np.array(
      [-1, -1, 1, -1, -1]])
 
 
-def test_1():
+def accuray(teacher, recalled):
+    """caluculate recall accuracy
+
+    :param teacher:teacher image
+    :param recalled: recalled image
+    :return:
+    """
+    match = (teacher == recalled)
+    precision = np.sum(match) / 25 * 100
+    print("precision", precision)
+
+
+def test_1(noise):
+    """experiment 1
+
+    :param noise: number of bit to be changed 1~5
+    :return:
+    """
     hopfield = Hopfield_Network()
     hopfield.train(image_1)
-    test = np.array([[0, 0, 1, 0, 0],
-                     [0, 0, 1, 0, 0],
-                     [0, 0, 1, 0, 0],
-                     [0, 0, 1, 0, 0],
-                     [0, 0, 1, 0, 0]])
-    hoge, _ = hopfield.recall(image_1)
-    print(hoge)
+    index = random.sample([i for i in range(25)], noise)
+    test = np.ravel(np.copy(image_1))
+    test[index] = -test[index]
+    test = np.reshape(test, (5, 5))
+    recall, _ = hopfield.recall(test)
+    accuray(image_1, recall)
 
 
 if __name__ == '__main__':
-    test_1()
+    test_1(int(input("noise")))
