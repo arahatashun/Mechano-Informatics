@@ -29,10 +29,9 @@ class Hopfield_Network():
         :param train: n times n train list
         """
         length = len(train)
-        print(length)
         for i in range(length):
             train_flatten = np.ravel(train[i]).reshape([5 * 5, 1])
-            self.weight = train_flatten @ train_flatten.T / length
+            self.weight += train_flatten @ train_flatten.T / length  #ここは和では
         np.fill_diagonal(self.weight, 0)
 
     def potential_energy(self, input_flatten):
