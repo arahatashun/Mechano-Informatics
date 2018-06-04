@@ -40,7 +40,11 @@ class Hopfield_Network():
         :param input_flatten:input image (flatten)
         :return v:energy
         """
-        v = -1 / 2 * input_flatten.T @ self.weight @ input_flatten
+        v = 0
+        for i in range(len(input_flatten)):
+            for j in range(len(input_flatten)):
+                v += - 1/2 * self.weight[i][j] * input_flatten[i] * input_flatten[j]
+        # v = -1 / 2 * input_flatten.T @ self.weight @ input_flatten
         v += self.theta.T @ input_flatten
         return v
 
@@ -153,22 +157,46 @@ def test_1(noise):
     print(recall)
     return energy
 
-def test_2(noise):
+def test_2(noise,image_num):
     """experiment 2
 
     :param noise:
+    :param image_num:
     :return:
     """
+    assert image_num<6, "image num must be < 6"
     hopfield = Hopfield_Network()
     hopfield.train(image_1,image_2,image_3,image_4,image_5,image_6)
-    test = add_noise(image_3, noise)
+    images = [image_1,image_2,image_3,image_4,image_5,image_6]
+    target_image = images[image_num]
+    test = add_noise(target_image, noise)
     recall, energy = hopfield.recall(test)
-    accuray(image_3, recall)
+    accuray(target_image, recall)
+    print("answer")
+    print(target_image)
+    print("test")
+    print(test)
+    print("recall")
+    print(recall)
+    print("energy")
+    print(energy[-1])
+    print("image_1 answer energy")
+    print(hopfield.potential_energy(np.ravel(image_1)))
+    print("image_2 answer energy")
+    print(hopfield.potential_energy(np.ravel(image_2)))
+    print("image_3 answer energy")
+    print(hopfield.potential_energy(np.ravel(image_3)))
+    print("image_4 answer energy")
+    print(hopfield.potential_energy(np.ravel(image_4)))
+    print("image_5 answer energy")
+    print(hopfield.potential_energy(np.ravel(image_5)))
+    print("image_6 answer energy")
+    print(hopfield.potential_energy(np.ravel(image_6)))
     return energy
 
 if __name__ == '__main__':
-    ene1 = test_2(int(input("noise")))
-    ene2 = test_2(int(input("noise")))
+    ene1 = test_2(int(input("noise")),int(input("image_num")))
+    ene2 = test_2(int(input("noise")),int(input("image_num")))
     plt.figure(figsize=(6, 5), facecolor="w")
     plt.plot(ene1)
     plt.plot(ene2)
