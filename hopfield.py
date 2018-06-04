@@ -161,7 +161,7 @@ def test_2(noise):
     """
     hopfield = Hopfield_Network()
     hopfield.train(image_1,image_2,image_3,image_4,image_5,image_6)
-    test = add_noise(image_6, noise)
+    test = add_noise(image_3, noise)
     recall, energy = hopfield.recall(test)
     accuray(image_3, recall)
     return energy
