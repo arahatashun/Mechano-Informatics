@@ -20,7 +20,7 @@ class Hopfield_Network():
 
         :param num_of_pattern: number of patterns to memorized
         """
-        self.theta = np.ones([25, 1]) * 0.0
+        self.theta = np.zeros([25, 1])
         self.weight = np.zeros([5 * 5, 5 * 5])
 
     def train(self, *train):
