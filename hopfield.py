@@ -32,7 +32,7 @@ class Hopfield_Network():
         for i in range(length):
             train_flatten = np.ravel(train[i]).reshape([5 * 5, 1])
             self.weight += train_flatten @ train_flatten.T / length  #ここは和では
-        np.fill_diagonal(self.weight, 0)
+        np.fill_diagonal(self.weight, 0) # destructive function
 
     def potential_energy(self, input_flatten):
         """calculate lyapunov function
