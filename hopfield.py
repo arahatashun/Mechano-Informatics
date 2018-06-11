@@ -117,6 +117,7 @@ image_6 = np.array(
      [1, 1, -1, 1, 1]])
 
 
+
 def accuray(teacher, recalled):
     """caluculate recall accuracy
 
@@ -166,8 +167,10 @@ def test_2(noise,image_num):
     """
     assert image_num<6, "image num must be < 6"
     hopfield = Hopfield_Network()
-    hopfield.train(image_1,image_2,image_3,image_4,image_5,image_6)
-    images = [image_1,image_2,image_3,image_4,image_5,image_6]
+    # hopfield.train(image_1,image_2,image_3,image_4,image_5,image_6)
+    hopfield.train(image_1,image_2)
+    images = [image_1,image_2]
+    # images = [image_1,image_2,image_3,image_4,image_5,image_6]
     target_image = images[image_num]
     test = add_noise(target_image, noise)
     recall, energy = hopfield.recall(test)
