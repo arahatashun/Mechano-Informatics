@@ -125,22 +125,10 @@ def generate_images(num):
     images = []
     for i in range(num):
         def gen_img():
-            raw_image = np.random.rand(5,5)
-            image = raw_image > 0.5
-            print(image)
-            mask_true = image == True
-            print(mask_true)
-            image[mask_true] = 1
-            image[:, :] = 1
-            print(image)
-            image[image == False] = -1
-            #print(image)
-            exit()
+            image = np.random.rand(5, 5)
+            image[ image > 0.5] = 1
+            image[ ~(image > 0.5)] = -1
             if np.sum([np.array_equal(image, images[j]) for j in range(i-1)]) >= 1:
-                print(images)
-                print(image)
-                print(i)
-                exit()
                 image = gen_img()
             else:
                 pass
