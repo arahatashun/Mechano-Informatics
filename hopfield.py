@@ -116,7 +116,39 @@ image_6 = np.array(
      [-1, -1, -1, -1, -1],
      [1, 1, -1, 1, 1]])
 
+def generate_images(num):
+    """ number of image to generate
 
+    :param num:
+    :return:
+    """
+    images = []
+    for i in range(num):
+        def gen_img():
+            raw_image = np.random.rand(5,5)
+            image = raw_image > 0.5
+            print(image)
+            mask_true = image == True
+            print(mask_true)
+            image[mask_true] = 1
+            image[:, :] = 1
+            print(image)
+            image[image == False] = -1
+            #print(image)
+            exit()
+            if np.sum([np.array_equal(image, images[j]) for j in range(i-1)]) >= 1:
+                print(images)
+                print(image)
+                print(i)
+                exit()
+                image = gen_img()
+            else:
+                pass
+            return image
+        im = gen_img()
+        images.append(im)
+
+    return images
 
 def accuray(teacher, recalled):
     """caluculate recall accuracy
@@ -158,20 +190,19 @@ def test_1(noise):
     print(recall)
     return energy
 
-def test_2(noise,image_num):
+def test_2(noise, num_image):
     """experiment 2
 
     :param noise:
-    :param image_num:
+    :param num_image:number of image to remeber
     :return:
     """
-    assert image_num<6, "image num must be < 6"
+    assert num_image < 7, "image num must be < 6"
     hopfield = Hopfield_Network()
-    # hopfield.train(image_1,image_2,image_3,image_4,image_5,image_6)
-    hopfield.train(image_1,image_2)
-    images = [image_1,image_2]
-    # images = [image_1,image_2,image_3,image_4,image_5,image_6]
-    target_image = images[image_num]
+    images = [image_1, image_2, image_3, image_4, image_5, image_6]
+    images = images[:num_image]
+    hopfield.train(*images)
+    target_image = images[0]
     test = add_noise(target_image, noise)
     recall, energy = hopfield.recall(test)
     accuray(target_image, recall)
@@ -181,6 +212,7 @@ def test_2(noise,image_num):
     print(test)
     print("recall")
     print(recall)
+    """
     print("energy")
     print(energy[-1])
     print("image_1 answer energy")
@@ -195,12 +227,10 @@ def test_2(noise,image_num):
     print(hopfield.potential_energy(np.ravel(image_5)))
     print("image_6 answer energy")
     print(hopfield.potential_energy(np.ravel(image_6)))
+    """
     return energy
 
 if __name__ == '__main__':
-    ene1 = test_2(int(input("noise")),int(input("image_num")))
-    ene2 = test_2(int(input("noise")),int(input("image_num")))
-    plt.figure(figsize=(6, 5), facecolor="w")
-    plt.plot(ene1)
-    plt.plot(ene2)
-    plt.show()
+    generate_images(5)
+    #ene1 = test_2(int(input("noise")),int(input("image_num")))
+
