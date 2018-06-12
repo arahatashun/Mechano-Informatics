@@ -189,7 +189,7 @@ def test_2():
             cor = cor * 100
             sim_arr[noise, num_image - 1] = sim
             cor_arr[noise, num_image - 1] = cor
-    fig, axes = plt.subplots(3, 2, figsize=(20, 15))
+    fig, axes = plt.subplots(3, 2)
     for i in range(max_image_num):
         axes.flat[i].plot(noise_percentage, sim_arr[:, i], label='類似度')
         axes.flat[i].plot(noise_percentage, cor_arr[:, i], label='正答率')
@@ -247,13 +247,14 @@ def test_3(num_image=20):
         cor_arr[noise] = cor
     fig, ax = plt.subplots(1, 1)
     ax.plot(noise_percentage, sim_arr, label='類似度(直交性有)')
-    #ax.plot(noise_percentage, cor_arr, label='正答率(直交性有)')
+    ax.plot(noise_percentage, cor_arr, label='正答率(直交性有)')
     ax.plot(noise_percentage, sim_rand, label='類似度')
-    #ax.plot(noise_percentage, cor_rand, label='正答率')
+    ax.plot(noise_percentage, cor_rand, label='正答率')
     ax.legend()
     ax.set_xlabel("Noise")
     # np.save("test_3_sim", sim_arr)
     # np.save("test_3_cor", cor_arr)
+    plt.savefig("test3.pgf")
     plt.show()
 
 
