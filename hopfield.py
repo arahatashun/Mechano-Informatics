@@ -172,13 +172,13 @@ def test_multi_img(noise, num_image):
         sim_sum += sim / EXP_NUM
         correct_sum += correct / EXP_NUM
     # print("類似度", sim_sum, "正答率", correct_sum)
-    return sim_sum, correct
+    return sim_sum, correct_sum
 
 
 def test_2():
     noise_list = np.arange(26)
     noise_percentage = noise_list * 4
-    max_image_num = 2
+    max_image_num = 6
     sim_arr = np.zeros((len(noise_list), max_image_num))
     cor_arr = np.zeros((len(noise_list), max_image_num))
     for num_image in range(max_image_num):
@@ -188,14 +188,80 @@ def test_2():
             cor = cor * 100
             sim_arr[noise, num_image - 1] = sim
             cor_arr[noise, num_image - 1] = cor
-    fig, ax = plt.subplots(max_image_num, 1, figsize=(6, 4))
+    fig, axes = plt.subplots(3, 2, figsize=(20, 15))
     for i in range(max_image_num):
-        ax[i].plot(noise_percentage, sim_arr[:, i], label='類似度')
-        ax[i].plot(noise_percentage, cor_arr[:, i], label='正答率')
-        ax[i].legend()
+        axes.flat[i].plot(noise_percentage, sim_arr[:, i], label='類似度')
+        axes.flat[i].plot(noise_percentage, cor_arr[:, i], label='正答率')
+        axes.flat[i].legend()
+        axes.flat[i].set_title("画像" + str(i + 1) + "枚")
+    # plt.savefig("test2.pgf")
+    np.save("sim", sim_arr)
+    np.save("cor", cor_arr)
+    plt.show()
+
+
+image_1 = np.array([[-1, 1, 1, 1, 1],
+                    [-1, 1, 1, 1, 1],
+                    [-1, 1, 1, 1, 1],
+                    [-1, 1, 1, 1, 1],
+                    [-1, 1, 1, 1, 1]])
+
+image_2 = np.array([[1, -1, 1, 1, 1],
+                    [1, -1, 1, 1, 1],
+                    [1, -1, 1, 1, 1],
+                    [1, -1, 1, 1, 1],
+                    [1, -1, 1, 1, 1]])
+
+image_3 = np.array([[1, 1, -1, 1, 1],
+                    [1, 1, -1, 1, 1],
+                    [1, 1, -1, 1, 1],
+                    [1, 1, -1, 1, 1],
+                    [1, 1, -1, 1, 1]])
+
+image_4 = np.array([[1, 1, 1, -1, 1],
+                    [1, 1, 1, -1, 1],
+                    [1, 1, 1, -1, 1],
+                    [1, 1, 1, -1, 1],
+                    [1, 1, 1, -1, 1]])
+
+image_5 = np.array([[1, 1, 1, 1, -1],
+                    [1, 1, 1, 1, -1],
+                    [1, 1, 1, 1, -1],
+                    [1, 1, 1, 1, -1],
+                    [1, 1, 1, 1, -1]])
+
+def test_3():
+    noise_list = np.arange(26)
+    noise_percentage = noise_list * 4
+    sim_arr = np.zeros((len(noise_list)))
+    cor_arr = np.zeros((len(noise_list)))
+    for noise in noise_list:
+        EXP_NUM = 100
+        sim_sum = 0
+        correct_sum = 0
+        for i in range(EXP_NUM):
+            hopfield = Hopfield_Network()
+            images = [image_1, image_2, image_3, image_4, image_5]
+            hopfield.train(*images)
+            target_image = images[0]
+            test = add_noise(target_image, noise)
+            recall, energy = hopfield.recall(test)
+            sim, correct = check_ans(target_image, recall)
+            sim_sum += sim / EXP_NUM
+            correct_sum += correct / EXP_NUM
+        sim_arr[noise] = sim_sum
+        cor_arr[noise] = correct_sum * 100
+
+    fig, ax = plt.subplots(1, 1)
+    ax.plot(noise_percentage, sim_arr, label='類似度')
+    ax.plot(noise_percentage, cor_arr, label='正答率')
+    ax.legend()
+    np.save("test_3_sim", sim_arr)
+    np.save("test_3_cor", cor_arr)
     plt.show()
 
 
 if __name__ == '__main__':
     # test_1(int(input("noise")))
-    test_2()
+    # test2()
+    test_3()
