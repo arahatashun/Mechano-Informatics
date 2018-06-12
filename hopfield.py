@@ -8,6 +8,7 @@ Hopfield Network
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+import random
 
 plt.rcParams['font.family'] = 'IPAPGothic'
 
@@ -157,7 +158,7 @@ def test_multi_img(noise, num_image):
     :param num_image:number of image to remeber
     :return:
     """
-    assert num_image < 7, "image num must be < 6"
+
     EXP_NUM = 100
     sim_sum = 0
     correct_sum = 0
@@ -200,37 +201,23 @@ def test_2():
     plt.show()
 
 
-image_1 = np.array([[-1, 1, 1, 1, 1],
-                    [-1, 1, 1, 1, 1],
-                    [-1, 1, 1, 1, 1],
-                    [-1, 1, 1, 1, 1],
-                    [-1, 1, 1, 1, 1]])
+def make_orthginal(num):
+    images = []
+    replace_index = random.sample(range(25), num)
+    for i in range(num):
+        im = np.ones((5,5))
+        im = im.flatten()
+        im[replace_index[i]] = -1
+        im = im.reshape((5, 5))
+        images.append(im)
+    return images
 
-image_2 = np.array([[1, -1, 1, 1, 1],
-                    [1, -1, 1, 1, 1],
-                    [1, -1, 1, 1, 1],
-                    [1, -1, 1, 1, 1],
-                    [1, -1, 1, 1, 1]])
+def test_3(num_image=20):
+    """
 
-image_3 = np.array([[1, 1, -1, 1, 1],
-                    [1, 1, -1, 1, 1],
-                    [1, 1, -1, 1, 1],
-                    [1, 1, -1, 1, 1],
-                    [1, 1, -1, 1, 1]])
-
-image_4 = np.array([[1, 1, 1, -1, 1],
-                    [1, 1, 1, -1, 1],
-                    [1, 1, 1, -1, 1],
-                    [1, 1, 1, -1, 1],
-                    [1, 1, 1, -1, 1]])
-
-image_5 = np.array([[1, 1, 1, 1, -1],
-                    [1, 1, 1, 1, -1],
-                    [1, 1, 1, 1, -1],
-                    [1, 1, 1, 1, -1],
-                    [1, 1, 1, 1, -1]])
-
-def test_3():
+    :param num_image: #to remember
+    :return:
+    """
     noise_list = np.arange(26)
     noise_percentage = noise_list * 4
     sim_arr = np.zeros((len(noise_list)))
@@ -241,7 +228,7 @@ def test_3():
         correct_sum = 0
         for i in range(EXP_NUM):
             hopfield = Hopfield_Network()
-            images = [image_1, image_2, image_3, image_4, image_5]
+            images = make_orthginal(num_image)
             hopfield.train(*images)
             target_image = images[0]
             test = add_noise(target_image, noise)
@@ -251,13 +238,22 @@ def test_3():
             correct_sum += correct / EXP_NUM
         sim_arr[noise] = sim_sum
         cor_arr[noise] = correct_sum * 100
-
+    cor_rand =  np.zeros((len(noise_list)))
+    sim_rand = np.zeros((len(noise_list)))
+    for noise in noise_list:
+        sim, cor = test_multi_img(noise, num_image)
+        cor = cor * 100
+        sim_arr[noise] = sim
+        cor_arr[noise] = cor
     fig, ax = plt.subplots(1, 1)
-    ax.plot(noise_percentage, sim_arr, label='類似度')
-    ax.plot(noise_percentage, cor_arr, label='正答率')
+    ax.plot(noise_percentage, sim_arr, label='類似度(直交性有)')
+    #ax.plot(noise_percentage, cor_arr, label='正答率(直交性有)')
+    ax.plot(noise_percentage, sim_rand, label='類似度')
+    #ax.plot(noise_percentage, cor_rand, label='正答率')
     ax.legend()
-    np.save("test_3_sim", sim_arr)
-    np.save("test_3_cor", cor_arr)
+    ax.set_xlabel("Noise")
+    # np.save("test_3_sim", sim_arr)
+    # np.save("test_3_cor", cor_arr)
     plt.show()
 
 
