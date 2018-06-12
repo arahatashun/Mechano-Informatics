@@ -8,8 +8,8 @@ Hopfield Network
 import numpy as np
 import random
 import matplotlib.pyplot as plt
-plt.rcParams['font.family'] = 'IPAPGothic'
 
+plt.rcParams['font.family'] = 'IPAPGothic'
 
 
 class Hopfield_Network():
@@ -31,8 +31,8 @@ class Hopfield_Network():
         length = len(train)
         for i in range(length):
             train_flatten = np.ravel(train[i]).reshape([5 * 5, 1])
-            self.weight += train_flatten @ train_flatten.T / length  #ここは和では
-        np.fill_diagonal(self.weight, 0) # destructive function
+            self.weight += train_flatten @ train_flatten.T / length  # ここは和では
+        np.fill_diagonal(self.weight, 0)  # destructive function
 
     def potential_energy(self, input_flatten):
         """calculate lyapunov function
@@ -41,10 +41,12 @@ class Hopfield_Network():
         :return v:energy
         """
         v = 0
+        """
         for i in range(len(input_flatten)):
             for j in range(len(input_flatten)):
                 v += - 1/2 * self.weight[i][j] * input_flatten[i] * input_flatten[j]
-        # v = -1 / 2 * input_flatten.T @ self.weight @ input_flatten
+        """
+        v = -1 / 2 * input_flatten.T @ self.weight @ input_flatten
         v += self.theta.T @ input_flatten
         return v
 
@@ -74,48 +76,6 @@ class Hopfield_Network():
         return recall_img, energy_array
 
 
-image_1 = np.array(
-    [[-1, -1, 1, -1, -1],
-     [-1, -1, 1, -1, -1],
-     [-1, -1, 1, -1, -1],
-     [-1, -1, 1, -1, -1],
-     [-1, -1, 1, -1, -1]])
-
-image_2 = np.array(
-    [[1, -1, -1, -1, -1],
-     [-1, 1, -1, -1, -1],
-     [-1, -1, 1, -1, -1],
-     [-1, -1, -1, 1, -1],
-     [-1, -1, -1, -1, 1]])
-
-image_3 = np.array(
-    [[-1, -1, -1, -1, 1],
-     [-1, -1, -1, 1, -1],
-     [-1, -1, 1, -1, -1],
-     [-1, 1, -1, -1, -1],
-     [1, -1, -1, -1, -1]])
-
-image_4 = np.array(
-    [[1, -1, -1, -1, -1],
-     [1, -1, -1, -1, -1],
-     [1, -1, -1, -1, -1],
-     [1, -1, -1, -1, -1],
-     [1, -1, -1, -1, -1]])
-
-image_5 = np.array(
-    [[-1, -1, -1, -1, 1],
-     [-1, -1, -1, -1, 1],
-     [-1, -1, -1, -1, 1],
-     [-1, -1, -1, -1, 1],
-     [-1, -1, -1, -1, 1]])
-
-image_6 = np.array(
-    [[-1, -1, -1, -1, -1],
-     [-1, -1, -1, -1, -1],
-     [-1, -1, -1, -1, -1],
-     [-1, -1, -1, -1, -1],
-     [1, 1, -1, 1, 1]])
-
 def generate_images(num):
     """ number of image to generate
 
@@ -126,28 +86,33 @@ def generate_images(num):
     for i in range(num):
         def gen_img():
             image = np.random.rand(5, 5)
-            image[ image > 0.5] = 1
-            image[ ~(image > 0.5)] = -1
-            if np.sum([np.array_equal(image, images[j]) for j in range(i-1)]) >= 1:
+            image[image > 0.5] = 1
+            image[~(image > 0.5)] = -1
+            if np.sum([np.array_equal(image, images[j]) for j in range(i - 1)]) >= 1:
                 image = gen_img()
             else:
                 pass
             return image
+
         im = gen_img()
         images.append(im)
 
     return images
 
-def accuray(teacher, recalled):
-    """caluculate recall accuracy
+
+def check_ans(teacher, recalled):
+    """caluculate recall similarity and correlct or not
 
     :param teacher:teacher image
     :param recalled: recalled image
     :return:
     """
     match = (teacher == recalled)
-    precision = np.sum(match) / 25 * 100
-    print("precision", precision)
+    similarity = np.sum(match) / 25 * 100
+    complete_match = 0
+    if similarity >= 100:
+        complete_match = 1
+    return similarity, complete_match
 
 
 def add_noise(img, noise):
@@ -169,56 +134,68 @@ def test_1(noise):
     :param noise: number of bit to be changed 1~5
     :return:
     """
-    hopfield = Hopfield_Network()
-    hopfield.train(image_1)
-    test = add_noise(image_1, noise)
-    print(test)
-    recall, energy = hopfield.recall(test)
-    accuray(image_1, recall)
-    print(recall)
-    return energy
+    EXP_NUM = 100
+    sim_sum = 0
+    correct_sum = 0
+    for i in range(EXP_NUM):
+        hopfield = Hopfield_Network()
+        image = generate_images(1)
+        hopfield.train(image)
+        test = add_noise(image, noise)
+        recall, energy = hopfield.recall(test)
+        sim, correct = check_ans(image, recall)
+        sim_sum += sim / EXP_NUM
+        correct_sum += correct / EXP_NUM
+    print("類似度", sim_sum, "正答率", correct_sum)
+    return sim_sum, correct
 
-def test_2(noise, num_image):
-    """experiment 2
+
+def test_multi_img(noise, num_image):
+    """experiment for multi image
 
     :param noise:
     :param num_image:number of image to remeber
     :return:
     """
     assert num_image < 7, "image num must be < 6"
-    hopfield = Hopfield_Network()
-    images = [image_1, image_2, image_3, image_4, image_5, image_6]
-    images = images[:num_image]
-    hopfield.train(*images)
-    target_image = images[0]
-    test = add_noise(target_image, noise)
-    recall, energy = hopfield.recall(test)
-    accuray(target_image, recall)
-    print("answer")
-    print(target_image)
-    print("test")
-    print(test)
-    print("recall")
-    print(recall)
-    """
-    print("energy")
-    print(energy[-1])
-    print("image_1 answer energy")
-    print(hopfield.potential_energy(np.ravel(image_1)))
-    print("image_2 answer energy")
-    print(hopfield.potential_energy(np.ravel(image_2)))
-    print("image_3 answer energy")
-    print(hopfield.potential_energy(np.ravel(image_3)))
-    print("image_4 answer energy")
-    print(hopfield.potential_energy(np.ravel(image_4)))
-    print("image_5 answer energy")
-    print(hopfield.potential_energy(np.ravel(image_5)))
-    print("image_6 answer energy")
-    print(hopfield.potential_energy(np.ravel(image_6)))
-    """
-    return energy
+    EXP_NUM = 100
+    sim_sum = 0
+    correct_sum = 0
+    for i in range(EXP_NUM):
+        hopfield = Hopfield_Network()
+        images = generate_images(num_image)
+        hopfield.train(*images)
+        target_image = images[0]
+        test = add_noise(target_image, noise)
+        recall, energy = hopfield.recall(test)
+        sim, correct = check_ans(target_image, recall)
+        sim_sum += sim / EXP_NUM
+        correct_sum += correct / EXP_NUM
+    # print("類似度", sim_sum, "正答率", correct_sum)
+    return sim_sum, correct
+
+
+def test_2():
+    noise_list = np.arange(26)
+    noise_percentage = noise_list * 4
+    max_image_num = 2
+    sim_arr = np.zeros((len(noise_list), max_image_num))
+    cor_arr = np.zeros((len(noise_list), max_image_num))
+    for num_image in range(max_image_num):
+        num_image = num_image + 1
+        for noise in noise_list:
+            sim, cor = test_multi_img(noise, num_image)
+            cor = cor * 100
+            sim_arr[noise, num_image - 1] = sim
+            cor_arr[noise, num_image - 1] = cor
+    fig, ax = plt.subplots(max_image_num, 1, figsize=(6, 4))
+    for i in range(max_image_num):
+        ax[i].plot(noise_percentage, sim_arr[:, i], label='類似度')
+        ax[i].plot(noise_percentage, cor_arr[:, i], label='正答率')
+        ax[i].legend()
+    plt.show()
+
 
 if __name__ == '__main__':
-    generate_images(5)
-    #ene1 = test_2(int(input("noise")),int(input("image_num")))
-
+    # test_1(int(input("noise")))
+    test_2()
