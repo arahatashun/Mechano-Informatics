@@ -142,7 +142,7 @@ class DecisionTree():
     def __init__(self, df):
         self.root = Node(df)
 
-    def train(self,type='greedy'):
+    def train(self,type):
         self.root.build(type)
 
     def predict(self, example):
@@ -152,39 +152,28 @@ class DecisionTree():
         self.root.prune(epsilon)
 
 
+def loo(df, epsilon, type='greedy'):
+    """leave one out method"""
+    right_prediction = 0
+    for i in range(len(df)):
+        df_test = df.loc[i,:]
+        df_train = df.drop(df.index[i]).reset_index(drop=True)
+        tree = DecisionTree(df_train)
+        tree.train(type)
+        tree.prune(epsilon)
+        predicit_label = tree.predict(df.loc[i, :])
+        answer_label = df.loc[i, 'target']
+        # print("predict",predicit_label)
+        # print("answer",answer_label)
+        if predicit_label == answer_label:
+            right_prediction += 1
+    accuracy = right_prediction/len(df)
+    print("accuracy", accuracy)
+    return accuracy
+
 if __name__ == '__main__':
     iris = datasets.load_iris()
     df = pd.DataFrame(iris.data, columns=iris.feature_names)
     df['target'] = iris.target_names[iris.target]
-    np.random.seed(0)
-    msk = np.random.rand(len(df)) < 0.8
-    df_train = df[msk].reset_index(drop=True)
-    df_test = df[~msk].reset_index(drop=True)
-    df_test = df_train
-    tree = DecisionTree(df_train)
-    tree.train()
-    tree.prune(0.1)
-    right_prediction = 0
-    for i in range(len(df_test)):
-        predicit_label = tree.predict(df_test.loc[i, :])
-        answer_label = df_test.loc[i, 'target']
-        # print("predict",predicit_label)
-        # print("answer",answer_label)
-        if predicit_label == answer_label:
-            right_prediction += 1
-
-    print("accuracy", right_prediction / len(df_test))
-
-    tree = DecisionTree(df_train)
-    tree.train('grid')
-    tree.prune(0.1)
-    right_prediction = 0
-    for i in range(len(df_test)):
-        predicit_label = tree.predict(df_test.loc[i, :])
-        answer_label = df_test.loc[i, 'target']
-        # print("predict",predicit_label)
-        # print("answer",answer_label)
-        if predicit_label == answer_label:
-            right_prediction += 1
-
-    print("accuracy", right_prediction / len(df_test))
+    loo(df,0)
+    loo(df,0,'grid')
