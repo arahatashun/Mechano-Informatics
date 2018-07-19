@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from sklearn import datasets
+from tqdm import tqdm
 
 plt.rcParams['font.family'] = 'IPAPGothic'
 
@@ -72,7 +73,7 @@ def search_attribute(df, type):
             min_delta_gini = delta_gini
             threshold = tmp_threshold
             attribute = columns[i]
-    print("delta gini:", delta_gini)
+    # print("delta gini:", delta_gini)
     return attribute, threshold, delta_gini
 
 
@@ -172,9 +173,9 @@ def make_prefiction(df, epsilon, type, i):
 
 def loo(df, epsilon, type='greedy'):
     """leave one out method"""
-    r = Parallel(n_jobs=-1)([delayed(make_prefiction)(df, epsilon, type, i) for i in range(len(df))])
+    r = Parallel(n_jobs=-1)([delayed(make_prefiction)(df, epsilon, type, i) for i in tqdm(range(len(df)))])
     accuracy = sum(r) / len(df)
-    print("accuracy", accuracy)
+    # print("accuracy", accuracy)
     return accuracy
 
 
