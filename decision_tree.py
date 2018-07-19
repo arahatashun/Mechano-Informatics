@@ -6,6 +6,7 @@ Code for assignment
 Hopfield Network
 """
 import matplotlib.pyplot as plt
+import sys
 import numpy as np
 import pandas as pd
 from sklearn import datasets
@@ -27,33 +28,49 @@ def gini_index(df):
     return gini
 
 
-def partial_gini(df, attribute):
+def partial_gini(df, attribute, type):
     sample = df.sort_values(attribute).reset_index(drop=True)
     num_sample = len(sample)
-    split_index = int(num_sample / 2)
-    # print('num_sample', num_sample)
-    # print('split_index', split_index)
-    threshold = 1 / 2 * (sample.loc[split_index - 1, attribute] + sample.loc[split_index, attribute])
-    left = sample[sample[attribute] <= threshold]
-    right = sample[sample[attribute] > threshold]
-    left_gini = np.sum(sample[attribute] <= threshold) / num_sample * gini_index(left)
-    right_gini = np.sum(sample[attribute] > threshold) / num_sample * gini_index(right)
-    delat_gini = gini_index(sample) - (left_gini + right_gini)
-    return delat_gini, threshold
+    if type == 'greedy':
+        split_index = int(num_sample / 2)
+        # print('num_sample', num_sample)
+        # print('split_index', split_index)
+        threshold = 1 / 2 * (sample.loc[split_index - 1, attribute] + sample.loc[split_index, attribute])
+        left = sample[sample[attribute] <= threshold]
+        right = sample[sample[attribute] > threshold]
+        left_gini = np.sum(sample[attribute] <= threshold) / num_sample * gini_index(left)
+        right_gini = np.sum(sample[attribute] > threshold) / num_sample * gini_index(right)
+        delat_gini = gini_index(sample) - (left_gini + right_gini)
+        return delat_gini, threshold
+    elif type == 'grid':
+        delta_gini_list = np.zeros(num_sample-1)
+        threshold_list = np.zeros(num_sample-1)
+        for i in range(num_sample-1):
+            split_index = i + 1
+            threshold =  1 / 2 * (sample.loc[split_index - 1, attribute] + sample.loc[split_index, attribute])
+            left = sample[sample[attribute] <= threshold]
+            right = sample[sample[attribute] > threshold]
+            left_gini = np.sum(sample[attribute] <= threshold) / num_sample * gini_index(left)
+            right_gini = np.sum(sample[attribute] > threshold) / num_sample * gini_index(right)
+            delat_gini = gini_index(sample) - (left_gini + right_gini)
+            delta_gini_list[i-1] = delat_gini
+            threshold_list[i-1] = threshold
+        max_index = np.argmax(delta_gini_list)
+        return delta_gini_list[max_index], threshold_list[max_index]
 
 
-def search_attribute(df):
+def search_attribute(df,type):
     columns = df.columns
-    max_delta_gini = 0
+    max_delta_gini = 0.0
     threshold = None
     attribute = None
     for i in range(len(columns) - 1):
-        delta_gini, tmp_threshold = partial_gini(df, columns[i])
-        print(delta_gini)
-        if delta_gini > max_delta_gini:
+        delta_gini, tmp_threshold = partial_gini(df, columns[i],type)
+        if delta_gini > max_delta_gini + sys.float_info.epsilon:
             min_delta_gini = delta_gini
             threshold = tmp_threshold
             attribute = columns[i]
+    print("delta gini:",delta_gini)
     return attribute, threshold, delta_gini
 
 
@@ -67,8 +84,8 @@ class Node(object):
         self.members = df.shape[0]
         assert not self.df.empty, "DateFrame Empty"
 
-    def split_node(self):
-        attribute, threshold, gini = search_attribute(self.df)
+    def split_node(self,type):
+        attribute, threshold, gini = search_attribute(self.df,type)
         # print("split attribute:", attribute)
         # print("split threshold:", threshold)
         self.left = Node(self.df[self.df[attribute] <= threshold])
@@ -81,10 +98,7 @@ class Node(object):
         return self.left, self.right
 
     def isleaf(self):
-        if len(self.df['target'].unique()) == 1:
-            # print("This is a leaf node")
-            return True
-        elif self.left == None and self.right == None:
+        if self.left == None and self.right == None:
             return True
         else:
             # print("This is not a leaf node")
@@ -102,36 +116,34 @@ class Node(object):
                 return self.right.predict(test)
 
     def prune(self, epsilon):
-        if self.isleaf(): return
+        if self.isleaf():
+            return
         self.left.prune(epsilon)
         self.right.prune(epsilon)
-        if self.left == None and self.right == None:
+        if self.left.threshold == None and self.right.threshold == None:
             if self.gini < epsilon:
-                print('Pruning')
+                print("Pruning")
                 self.left = None
                 self.right = None
 
-
-def build_decision_tree(root, Node_list):
-    """recursive call for building decision tree"""
-    if root.isleaf() is False:
-        # print('function called')
-        left, right = root.split_node()
-        Node_list.append(left)
-        Node_list.append(right)
-        build_decision_tree(left, Node_list)
-        build_decision_tree(right, Node_list)
-    else:
-        return None
-
+    def build(self,type):
+        """recursive call for building decision tree"""
+        if len(self.df['target'].unique()) != 1 :
+            # print("build")
+            left,right = self.split_node(type)
+            self.left = left
+            self.right = right
+            self.left.build(type)
+            self.right.build(type)
+        else:
+            return None
 
 class DecisionTree():
     def __init__(self, df):
-        self.nodes = []
         self.root = Node(df)
 
-    def train(self):
-        build_decision_tree(self.root, self.nodes)
+    def train(self,type='greedy'):
+        self.root.build(type)
 
     def predict(self, example):
         return self.root.predict(example)
@@ -148,13 +160,30 @@ if __name__ == '__main__':
     msk = np.random.rand(len(df)) < 0.8
     df_train = df[msk].reset_index(drop=True)
     df_test = df[~msk].reset_index(drop=True)
+    df_test = df_train
     tree = DecisionTree(df_train)
     tree.train()
-    tree.prune(20)
+    tree.prune(0.1)
     right_prediction = 0
     for i in range(len(df_test)):
         predicit_label = tree.predict(df_test.loc[i, :])
         answer_label = df_test.loc[i, 'target']
+        # print("predict",predicit_label)
+        # print("answer",answer_label)
+        if predicit_label == answer_label:
+            right_prediction += 1
+
+    print("accuracy", right_prediction / len(df_test))
+
+    tree = DecisionTree(df_train)
+    tree.train('grid')
+    tree.prune(0.1)
+    right_prediction = 0
+    for i in range(len(df_test)):
+        predicit_label = tree.predict(df_test.loc[i, :])
+        answer_label = df_test.loc[i, 'target']
+        # print("predict",predicit_label)
+        # print("answer",answer_label)
         if predicit_label == answer_label:
             right_prediction += 1
 
