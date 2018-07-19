@@ -17,7 +17,7 @@ def gini_index(df):
     """gini index"""
     num_data = df.shape[0]
     if num_data == 0:
-        print('numdate is 0')
+        # print('numdate is 0')
         return 0
     gini = 0
     for i in np.unique(df['target']):
@@ -31,8 +31,8 @@ def partial_gini(df, attribute):
     sample = df.sort_values(attribute).reset_index(drop=True)
     num_sample = len(sample)
     split_index = int(num_sample / 2)
-    print('num_sample', num_sample)
-    print('split_index', split_index)
+    # print('num_sample', num_sample)
+    # print('split_index', split_index)
     threshold = 1 / 2 * (sample.loc[split_index - 1, attribute] + sample.loc[split_index, attribute])
     left = sample[sample[attribute] <= threshold]
     right = sample[sample[attribute] > threshold]
@@ -82,12 +82,12 @@ class Node(object):
 
     def isleaf(self):
         if len(self.df['target'].unique()) == 1:
-            print("This is a leaf node")
+            # print("This is a leaf node")
             return True
         elif self.left == None and self.right == None:
             return True
         else:
-            print("This is not a leaf node")
+            # print("This is not a leaf node")
             return False
 
     def predict(self, test):
@@ -95,7 +95,7 @@ class Node(object):
             classification_result = self.df['target'].mode()[0]
             return classification_result
         else:
-            print("Go Deeper")
+            # print("Go Deeper")
             if test[self.attribute] < self.threshold:
                 return self.left.predict(test)
             else:
@@ -115,7 +115,7 @@ class Node(object):
 def build_decision_tree(root, Node_list):
     """recursive call for building decision tree"""
     if root.isleaf() is False:
-        print('function called')
+        # print('function called')
         left, right = root.split_node()
         Node_list.append(left)
         Node_list.append(right)
