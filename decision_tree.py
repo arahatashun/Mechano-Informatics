@@ -125,7 +125,7 @@ class Node(object):
         self.right.prune(epsilon)
         if self.left.threshold == None and self.right.threshold == None:
             if self.gini < epsilon:
-                print("Pruning")
+                # print("Pruning")
                 self.left = None
                 self.right = None
 
@@ -173,7 +173,7 @@ def make_prefiction(df, epsilon, type, i):
 
 def loo(df, epsilon, type='greedy'):
     """leave one out method"""
-    r = Parallel(n_jobs=-1)([delayed(make_prefiction)(df, epsilon, type, i) for i in tqdm(range(len(df)))])
+    r = Parallel(n_jobs=-1)([delayed(make_prefiction)(df, epsilon, type, i) for i in range(len(df))])
     accuracy = sum(r) / len(df)
     # print("accuracy", accuracy)
     return accuracy
@@ -183,13 +183,13 @@ if __name__ == '__main__':
     iris = datasets.load_iris()
     df = pd.DataFrame(iris.data, columns=iris.feature_names)
     df['target'] = iris.target_names[iris.target]
-    epsilon_list = np.linspace(0,1,10)
+    epsilon_list = np.linspace(0, 1, 10)
     greedy = np.zeros(10)
     grid = np.zeros(10)
-    for i in range(len(epsilon_list)):
+    for i in tqdm(range(len(epsilon_list))):
         greedy[i] = loo(df, epsilon_list[i])
         grid[i] = loo(df, epsilon_list[i], 'grid')
-    plt.plot(epsilon_list, greedy, label= '２分割')
+    plt.plot(epsilon_list, greedy, label='２分割')
     plt.plot(epsilon_list, grid, label='ジニ不純度最大の分割')
     plt.xlabel("pruning")
     plt.ylabel("accuracy")
@@ -197,4 +197,3 @@ if __name__ == '__main__':
     plt.legend()
     plt.savefig("loo.pdf")
     plt.show()
-
