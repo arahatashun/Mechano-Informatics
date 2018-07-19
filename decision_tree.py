@@ -5,10 +5,12 @@
 Code for assignment
 Hopfield Network
 """
-import matplotlib.pyplot as plt
 import sys
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
 from sklearn import datasets
 
 plt.rcParams['font.family'] = 'IPAPGothic'
@@ -43,34 +45,34 @@ def partial_gini(df, attribute, type):
         delat_gini = gini_index(sample) - (left_gini + right_gini)
         return delat_gini, threshold
     elif type == 'grid':
-        delta_gini_list = np.zeros(num_sample-1)
-        threshold_list = np.zeros(num_sample-1)
-        for i in range(num_sample-1):
+        delta_gini_list = np.zeros(num_sample - 1)
+        threshold_list = np.zeros(num_sample - 1)
+        for i in range(num_sample - 1):
             split_index = i + 1
-            threshold =  1 / 2 * (sample.loc[split_index - 1, attribute] + sample.loc[split_index, attribute])
+            threshold = 1 / 2 * (sample.loc[split_index - 1, attribute] + sample.loc[split_index, attribute])
             left = sample[sample[attribute] <= threshold]
             right = sample[sample[attribute] > threshold]
             left_gini = np.sum(sample[attribute] <= threshold) / num_sample * gini_index(left)
             right_gini = np.sum(sample[attribute] > threshold) / num_sample * gini_index(right)
             delat_gini = gini_index(sample) - (left_gini + right_gini)
-            delta_gini_list[i-1] = delat_gini
-            threshold_list[i-1] = threshold
+            delta_gini_list[i - 1] = delat_gini
+            threshold_list[i - 1] = threshold
         max_index = np.argmax(delta_gini_list)
         return delta_gini_list[max_index], threshold_list[max_index]
 
 
-def search_attribute(df,type):
+def search_attribute(df, type):
     columns = df.columns
     max_delta_gini = 0.0
     threshold = None
     attribute = None
     for i in range(len(columns) - 1):
-        delta_gini, tmp_threshold = partial_gini(df, columns[i],type)
+        delta_gini, tmp_threshold = partial_gini(df, columns[i], type)
         if delta_gini > max_delta_gini + sys.float_info.epsilon:
             min_delta_gini = delta_gini
             threshold = tmp_threshold
             attribute = columns[i]
-    print("delta gini:",delta_gini)
+    print("delta gini:", delta_gini)
     return attribute, threshold, delta_gini
 
 
@@ -84,8 +86,8 @@ class Node(object):
         self.members = df.shape[0]
         assert not self.df.empty, "DateFrame Empty"
 
-    def split_node(self,type):
-        attribute, threshold, gini = search_attribute(self.df,type)
+    def split_node(self, type):
+        attribute, threshold, gini = search_attribute(self.df, type)
         # print("split attribute:", attribute)
         # print("split threshold:", threshold)
         self.left = Node(self.df[self.df[attribute] <= threshold])
@@ -126,11 +128,11 @@ class Node(object):
                 self.left = None
                 self.right = None
 
-    def build(self,type):
+    def build(self, type):
         """recursive call for building decision tree"""
-        if len(self.df['target'].unique()) != 1 :
+        if len(self.df['target'].unique()) != 1:
             # print("build")
-            left,right = self.split_node(type)
+            left, right = self.split_node(type)
             self.left = left
             self.right = right
             self.left.build(type)
@@ -138,11 +140,12 @@ class Node(object):
         else:
             return None
 
+
 class DecisionTree():
     def __init__(self, df):
         self.root = Node(df)
 
-    def train(self,type):
+    def train(self, type):
         self.root.build(type)
 
     def predict(self, example):
@@ -152,28 +155,45 @@ class DecisionTree():
         self.root.prune(epsilon)
 
 
+def make_prefiction(df, epsilon, type, i):
+    df_train = df.drop(df.index[i]).reset_index(drop=True)
+    tree = DecisionTree(df_train)
+    tree.train(type)
+    tree.prune(epsilon)
+    predicit_label = tree.predict(df.loc[i, :])
+    answer_label = df.loc[i, 'target']
+    # print("predict",predicit_label)
+    # print("answer",answer_label)
+    if predicit_label == answer_label:
+        return 1
+    else:
+        return 0
+
+
 def loo(df, epsilon, type='greedy'):
     """leave one out method"""
-    right_prediction = 0
-    for i in range(len(df)):
-        df_test = df.loc[i,:]
-        df_train = df.drop(df.index[i]).reset_index(drop=True)
-        tree = DecisionTree(df_train)
-        tree.train(type)
-        tree.prune(epsilon)
-        predicit_label = tree.predict(df.loc[i, :])
-        answer_label = df.loc[i, 'target']
-        # print("predict",predicit_label)
-        # print("answer",answer_label)
-        if predicit_label == answer_label:
-            right_prediction += 1
-    accuracy = right_prediction/len(df)
+    r = Parallel(n_jobs=-1)([delayed(make_prefiction)(df, epsilon, type, i) for i in range(len(df))])
+    accuracy = sum(r) / len(df)
     print("accuracy", accuracy)
     return accuracy
+
 
 if __name__ == '__main__':
     iris = datasets.load_iris()
     df = pd.DataFrame(iris.data, columns=iris.feature_names)
     df['target'] = iris.target_names[iris.target]
-    loo(df,0)
-    loo(df,0,'grid')
+    epsilon_list = np.linspace(0,1,10)
+    greedy = np.zeros(10)
+    grid = np.zeros(10)
+    for i in range(len(epsilon_list)):
+        greedy[i] = loo(df, epsilon_list[i])
+        grid[i] = loo(df, epsilon_list[i], 'grid')
+    plt.plot(epsilon_list, greedy, label= '２分割')
+    plt.plot(epsilon_list, grid, label='ジニ不純度最大の分割')
+    plt.xlabel("pruning")
+    plt.ylabel("accuracy")
+    plt.title("LOO")
+    plt.legend()
+    plt.savefig("loo.pdf")
+    plt.show()
+
