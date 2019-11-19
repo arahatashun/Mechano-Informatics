@@ -259,5 +259,5 @@ def test_3(num_image=20):
 
 if __name__ == '__main__':
     # test_1(int(input("noise")))
-    # test2()
-    test_3()
+    test_2()
+    # test_3()
