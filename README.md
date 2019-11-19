@@ -2,3 +2,4 @@
 
 1. Decision Tree
 2. Hopfield Network
+![hopfield(https://github.com/arahatashun/mechano_informatics/blob/master/images/hopfield.png)
