@@ -8,7 +8,7 @@ Hopfield Network
 import numpy as np
 import matplotlib.pyplot as plt
 import random
-
+from joblib import Parallel, delayed
 plt.rcParams['font.family'] = 'IPAPGothic'
 
 
@@ -192,6 +192,7 @@ def test_2():
     for i in range(max_image_num):
         axes.flat[i].plot(noise_percentage, sim_arr[:, i], label='類似度')
         axes.flat[i].plot(noise_percentage, cor_arr[:, i], label='正答率')
+        axes.flat[i].set_xlabel("ノイズ")
         axes.flat[i].legend()
         axes.flat[i].set_title("画像" + str(i + 1) + "枚")
     # plt.savefig("test2.pgf")
